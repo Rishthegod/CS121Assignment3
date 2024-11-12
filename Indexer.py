@@ -1,13 +1,12 @@
 import os
 import json
 import sys
-import re
+
 import nltk
 import pickle
 from bs4 import BeautifulSoup
-
 from collections import defaultdict
-import psutil
+
 class Indexer:
 
     def __init__(self, data_dir, memory_limit=500*1024*1024):
@@ -16,9 +15,14 @@ class Indexer:
         self.doc_count = 0
         self.partial_indexes = []
         # self.stemmer = placeholder
-        self.memory_limit = memory_limit  # Memory limit in bytes
+        self.memory_limit = memory_limit  # Memory limit in bytes 500 mb
+
+
         self.partial_index_count = 0
         self.unique_tokens = set()
+
+
+
     def process_document(self, filepath):
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
