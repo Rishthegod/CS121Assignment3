@@ -31,8 +31,29 @@ from bs4 import BeautifulSoup, Comment
 
 
 def is_hidden(element):
+    """
+    
+    Determines whether an HTML element is hidden based on its style attributes or tag type.
+
+    Parameters:
+    - element (bs4.element.Tag): The HTML element to check.
+
+    Returns:
+    - bool: True if the element is considered hidden, False otherwise.
+
+    An element is considered hidden if:
+    - It has a 'style' attribute containing 'display:none' or 'visibility:hidden'.
+    - It is an <input> element with type 'hidden'.
+    
+    
+    """
+
 
     """Check commonly used CSS properties to determine if an element is hidden"""
+
+    if element.name == 'input' and element.attrs.get('type', '').lower() == 'hidden':
+        return True
+
     if 'style' in element.attrs:
 
         style = element.attrs['style'].lower()
@@ -40,12 +61,35 @@ def is_hidden(element):
         if "display:none" in style or "visibility:hidden" in style:
             return True
         
+
+    
+
+        
     return False
     
     
             
 
 def extract_tokens(html):
+
+    """
+    Extracts text from an HTML string and returns a list of [text, parent_element] pairs.
+
+    Parameters:
+    - html (str): The HTML content as a string.
+
+    Returns:
+    - List[List[str, bs4.element.Tag]]: A list where each item is a list containing:
+        - text (str): The extracted text content.
+        - parent_element (bs4.element.Tag): The parent HTML element of the text.
+
+    The function ignores:
+    - Comments (<!-- -->)
+    - Text within <script>, <style>, and <meta> tags
+    - Hidden elements (e.g., elements with 'display:none' or 'visibility:hidden' styles)
+    - Empty strings after stripping whitespace
+    """
+
     soup = BeautifulSoup(html, 'html.parser')
     tokens = []
     for element in soup.descendants:
@@ -83,6 +127,33 @@ def main():
     tokens = extract_tokens(html)
     for text, parent in tokens:
         print(f"Text: '{text}', Parent: <{parent.name}>")
+        
+    html2 = '''
+    <html>
+        <head>
+            <title>Sample Title</title>
+            <script type="text/javascript">
+                var x = 1;
+            </script>
+        </head>
+        <body>
+            <!-- This is a comment -->
+            <p>Visible text</p>
+            <p style="display:none;">Hidden text</p>
+            <p style="visibility:hidden;">Also hidden text</p>
+            <div>
+                Text inside div
+                <input type="hidden" value="secret"/>
+                <input type="text" value="visible input"/>
+            </div>
+        </body>
+    </html>
+    '''
+    print("Test Case 2:")
+    tokens2 = extract_tokens(html2)
+    for text, parent in tokens2:
+        print(f"Text: '{text}', Parent: <{parent.name}>")
+    
 
 if __name__ == '__main__':
     main()
