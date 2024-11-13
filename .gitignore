@@ -1,5 +1,9 @@
 .conda
 .vscode
 __pycache__
+.DS_Store
 
 index_files
+# the DEV folder provided by the assignment
+data_dump
+
