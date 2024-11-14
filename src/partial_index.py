@@ -14,6 +14,39 @@ def setup():
 setup()
 
 
+class _DocumentIdLookup:
+    def __init__(self) -> None:
+        self._lines = []
+        self._url_lookup = {}
+        self._path = Path(FOLDER_NAME + 'documents.txt')
+        if not self._path.exists():
+            self._path.touch(777, False)
+        else:
+            for i, line in enumerate(self._path.open().readlines()):
+                self._lines.append(line.strip())
+                self._url_lookup[line.strip()] = i
+        
+        self._file = self._path.open('a+')
+    
+    
+    def get_url(self, doc_id: int) -> str:
+        if not 0 <= doc_id < len(self._lines): return None
+        return self._lines[doc_id]
+    
+    def add_url(self, url: str) -> int:
+        if url in self._url_lookup: return self._url_lookup[url]
+
+        new_id = len(self._lines)
+        self._url_lookup[url] = new_id
+        self._lines.append(url)
+        self._file.writelines([url + '\n'])
+        return new_id
+        
+
+
+documents = _DocumentIdLookup()
+
+
 class PartialIndex:
     FILE_EXT = '.index.dat'
 
@@ -66,6 +99,14 @@ def main():
     print(test_index.get_name())
     print(result := test_index.read_from_disk())
     print(test_index.write_to_disk(result))
+
+    print('Existing first:', documents.get_url(0))
+    print('Existing second:', documents.get_url(1))
+
+    documents.add_url('https://example.com')
+    new_id = documents.add_url('https://example.net')
+
+    print('New example.net:', documents.get_url(new_id))
 
 
 if __name__ == '__main__':
