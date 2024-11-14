@@ -32,7 +32,6 @@ from bs4 import BeautifulSoup, Comment
 
 def is_hidden(element):
     """
-    
     Determines whether an HTML element is hidden based on its style attributes or tag type.
 
     Parameters:
@@ -44,26 +43,16 @@ def is_hidden(element):
     An element is considered hidden if:
     - It has a 'style' attribute containing 'display:none' or 'visibility:hidden'.
     - It is an <input> element with type 'hidden'.
-    
-    
     """
 
 
-    """Check commonly used CSS properties to determine if an element is hidden"""
-
-    if element.name == 'input' and element.attrs.get('type', '').lower() == 'hidden':
-        return True
-
+    # Check commonly used CSS properties to determine if an element is hidden
     if 'style' in element.attrs:
-
-        style = element.attrs['style'].lower()
-
+        style = element.attrs['style'].lower().replace(': ', ':')
         if "display:none" in style or "visibility:hidden" in style:
             return True
-        
-
     
-
+    if 'hidden' in element.attrs: return True
         
     return False
     
@@ -71,7 +60,6 @@ def is_hidden(element):
             
 
 def extract_tokens(html):
-
     """
     Extracts text from an HTML string and returns a list of [text, parent_element] pairs.
 
@@ -101,7 +89,7 @@ def extract_tokens(html):
             if is_hidden(parent):
                 continue
 
-            if parent.name in  ['script', 'meta', 'style']:
+            if parent.name in ['script', 'meta', 'style']:
                 continue
             
             text = element.strip()
@@ -135,6 +123,7 @@ def main():
             <script type="text/javascript">
                 var x = 1;
             </script>
+            <style>.hide { display: none }</style>
         </head>
         <body>
             <!-- This is a comment -->
@@ -142,14 +131,18 @@ def main():
             <p style="display:none;">Hidden text</p>
             <p style="visibility:hidden;">Also hidden text</p>
             <div>
+                <p class="hide">hidden by css, but if it shows up then whatever</p>
                 Text inside div
+                <p hidden>oh noes this is hidden</p>
+                <a>nested visible text</a>
                 <input type="hidden" value="secret"/>
                 <input type="text" value="visible input"/>
             </div>
+            <script>const y = 2;</script>
         </body>
     </html>
     '''
-    print("Test Case 2:")
+    print("\nTest Case 2:")
     tokens2 = extract_tokens(html2)
     for text, parent in tokens2:
         print(f"Text: '{text}', Parent: <{parent.name}>")
