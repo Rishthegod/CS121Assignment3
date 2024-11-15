@@ -4,7 +4,7 @@ from partial_index import PartialIndex
 from enum import Enum
 
 
-BUCKET_ENTRY_LIMIT = 20000
+BUCKET_ENTRY_LIMIT = 50000
 
 
 class TermType(Enum):
@@ -44,9 +44,10 @@ class TokenBucket:
         token_docs = self._token_map.get(stemmed, {})
 
         doc_entry = token_docs.get(document_id, { 'document_id': document_id })
+        if document_id not in token_docs:
+            self._size += 1
+
         self.add_frequency(doc_entry, term_type)
-        if 'document_id' not in doc_entry:
-            raise TypeError('MISSING ID')
 
         # Write-back for if it is a new entry
         token_docs[document_id] = doc_entry
@@ -68,6 +69,7 @@ class TokenBucket:
 
         self._disk_index.write_to_disk(temp_map)
         self._token_map = {}
+        self._size = 0
 
 
     def print(self, data: dict = None) -> None:
@@ -84,8 +86,9 @@ class TokenBucket:
 
 
     def __len__(self) -> int:
-        document_counts = [len(token_doc_map) for token_doc_map in self._token_map.values()]
-        return sum(document_counts)
+        return self._size
+        # document_counts = [len(token_doc_map) for token_doc_map in self._token_map.values()]
+        # return sum(document_counts)
 
 
     def stem_token(self, token: str) -> str:

@@ -96,7 +96,7 @@ def extract_tokens(html):
             
             text = element.strip()
             if text:
-                if 'encoding=' in text.lower(): print('AAAA', parent, 'AAAAA\n\n\n\n\n\n\n\n\n\n\n')
+                # if 'encoding=' in text.lower(): print('AAAA', parent, 'AAAAA\n\n\n\n\n\n\n\n\n\n\n')
                 tokens.append([text, parent])
 
     return tokens

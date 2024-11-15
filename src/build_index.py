@@ -4,6 +4,7 @@ from pathlib import Path
 import text_extractor as te
 import json
 import sys
+import time
 
 
 all_buckets = [
@@ -45,14 +46,27 @@ def build_index_helper(source: Path) -> dict:
     with open(source, 'r') as file:
         data = json.loads(file.read())
 
+
+    start = time.perf_counter()
+
     url = data["url"]
     html_content = data["content"]
     doc_id = documents.add_url(url)
 
+    start, diff = time.perf_counter(), time.perf_counter() - start
+    print(f'  --> Add URL took {round(diff * 1000, 3)}ms')
+
     mapped_tokens = te.map_tokens(te.extract_tokens(html_content))
+
+    start, diff = time.perf_counter(), time.perf_counter() - start
+    print(f'  --> Mapped Tokens took {round(diff * 1000, 3)}ms')
+
     for token, term_type in mapped_tokens:
         bucket = all_buckets[find_bucket(token[0])]
         bucket.add_document(token, doc_id, term_type)
+
+    start, diff = time.perf_counter(), time.perf_counter() - start
+    print(f'  --> Add Document took {round(diff * 1000, 3)}ms')
 
 
 def build_index(path_lists: list[Path]):

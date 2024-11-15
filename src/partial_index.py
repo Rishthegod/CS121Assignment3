@@ -131,6 +131,13 @@ def main():
 
     # print('New example.net:', documents.get_url(new_id))
 
+    print('Total Unique Tokens:')
+    names = ['A-F', 'G-L', 'M-Q', 'R-V', 'W-Z', 'numbers', 'symbols']
+    indexes = [PartialIndex(n) for n in names]
+    sizes = { idx.get_name(): len(idx.read_from_disk().items()) for idx in indexes }
+    total = sum(sizes.values())
+    print(sizes, total, 'tokens')
+
 
 if __name__ == '__main__':
     main()
