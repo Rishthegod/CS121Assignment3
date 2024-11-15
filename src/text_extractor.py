@@ -78,7 +78,9 @@ def extract_tokens(html):
     - Empty strings after stripping whitespace
     """
 
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, 'html.parser').find('html')
+    if not soup: return []
+
     tokens = []
     for element in soup.descendants:
         if isinstance(element, Comment):
@@ -89,11 +91,12 @@ def extract_tokens(html):
             if is_hidden(parent):
                 continue
 
-            if parent.name in ['script', 'meta', 'style']:
+            if parent.name in ['script', 'meta', 'style', 'html', 'head', '']:
                 continue
             
             text = element.strip()
             if text:
+                if 'encoding=' in text.lower(): print('AAAA', parent, 'AAAAA\n\n\n\n\n\n\n\n\n\n\n')
                 tokens.append([text, parent])
 
     return tokens
@@ -123,8 +126,13 @@ def get_termType(parent):
         return TermType.Anchor
     else:
         return TermType.Normal
-        
-        
+
+
+def get_token_map(html_text: str):
+    extracted = extract_tokens(html_text)
+    return map_tokens(extracted)  
+
+
 def main():
     html = """
     <html>
@@ -183,6 +191,10 @@ def main():
     for text, parent in mapped_tokens2:
         print(f"Text: '{text}', Parent: {parent}")
     
+    print('\nComparison')
+    print(mapped_tokens2 == get_token_map(html2))
+    print(get_token_map(html2))
+
 
 if __name__ == '__main__':
     main()

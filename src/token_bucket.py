@@ -4,7 +4,7 @@ from partial_index import PartialIndex
 from enum import Enum
 
 
-BUCKET_ENTRY_LIMIT = 3
+BUCKET_ENTRY_LIMIT = 20000
 
 
 class TermType(Enum):
@@ -30,6 +30,8 @@ class TokenBucket:
 
 
     def add_document(self, token: str, document_id: int, term_type: TermType = TermType.Normal, idf = None) -> None:
+        if type(document_id) != int:
+            raise TypeError('Invalid Document ID. Must be a number from documents.add_url() return value')
         document_id = str(document_id)
 
         # if our current size is too large, we update the disk index
@@ -43,6 +45,8 @@ class TokenBucket:
 
         doc_entry = token_docs.get(document_id, { 'document_id': document_id })
         self.add_frequency(doc_entry, term_type)
+        if 'document_id' not in doc_entry:
+            raise TypeError('MISSING ID')
 
         # Write-back for if it is a new entry
         token_docs[document_id] = doc_entry
@@ -53,9 +57,13 @@ class TokenBucket:
         temp_map = self._disk_index.read_from_disk()
         for tok, pages in self._token_map.items():
             for page_doc_id, page in pages.items():
-                posting_to_update = temp_map[tok][page_doc_id]
+                temp_token_map = temp_map.get(tok, {})
+                temp_map[tok] = temp_token_map
+                posting_to_update = temp_token_map.get(page_doc_id, { 'document_id': page_doc_id })
+                temp_token_map[page_doc_id] = posting_to_update
                 for property, value in [p for p in page.items() if p[0].startswith('frequency')]:
                     posting_to_update[property] = posting_to_update.get(property, 0) + value
+
                     # print(f'need to update {tok} -> {page_doc_id} with {property}:{value}')
 
         self._disk_index.write_to_disk(temp_map)
