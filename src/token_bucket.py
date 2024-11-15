@@ -29,12 +29,14 @@ class TokenBucket:
         doc_entry['frequency'] = doc_entry.get('frequency', 0) + 1
 
 
-    def add_document(self, token: str, document_id: str, term_type: TermType = TermType.Normal, idf = None) -> None:
+    def add_document(self, token: str, document_id: int, term_type: TermType = TermType.Normal, idf = None) -> None:
+        document_id = str(document_id)
+
         # if our current size is too large, we update the disk index
         if len(self) >= BUCKET_ENTRY_LIMIT:
-            print(f'Surpassed {BUCKET_ENTRY_LIMIT} of entries, updating partial index `{self._disk_index.get_name()}` on disk')
-            self._disk_index.write_to_disk(self._token_map)
-            self._token_map = {}
+            print(f'\nSurpassed {BUCKET_ENTRY_LIMIT} of entries, updating partial index `{self._disk_index.get_name()}` on disk')
+            # self._disk_index.write_to_disk(self._token_map)
+            self.merge()
 
         stemmed = self.stem_token(token)
         token_docs = self._token_map.get(stemmed, {})
@@ -47,10 +49,30 @@ class TokenBucket:
         self._token_map[stemmed] = token_docs
 
 
-    def print(self) -> None:
+    def merge(self) -> None:
+        temp_map = self._disk_index.read_from_disk()
+        for tok, pages in self._token_map.items():
+            for page_doc_id, page in pages.items():
+                posting_to_update = temp_map[tok][page_doc_id]
+                for property, value in [p for p in page.items() if p[0].startswith('frequency')]:
+                    posting_to_update[property] = posting_to_update.get(property, 0) + value
+                    # print(f'need to update {tok} -> {page_doc_id} with {property}:{value}')
+
+        self._disk_index.write_to_disk(temp_map)
+        self._token_map = {}
+
+
+    def print(self, data: dict = None) -> None:
         print(f'TokenBucket<{len(self)}> = ', end='')
-        prettified = json.dumps(self._token_map, indent=2)
+        prettified = json.dumps(self._token_map if data is None else data, indent=2)
         print(prettified)
+
+
+    def print_full(self) -> None:
+        self.merge()
+        temp_map = self._disk_index.read_from_disk()
+        print('Full', end='')
+        self.print(temp_map)
 
 
     def __len__(self) -> int:
@@ -65,18 +87,20 @@ class TokenBucket:
 
 def main():
     test_bucket = TokenBucket('test-token')
-    test_bucket._token_map = test_bucket._disk_index.read_from_disk()
+    # test_bucket._token_map = test_bucket._disk_index.read_from_disk()
 
-    test_bucket.add_document('tokenizer', 'https://1.1.1.1')
-    test_bucket.add_document('tokenize', 'https://1.1.1.1')
-    test_bucket.add_document('tokenize', 'https://1.1.1.1')
-    test_bucket.add_document('tokens', 'https://1.1.1.1')  # total should be 4
-    test_bucket.add_document('tokens', 'second_id')
-    test_bucket.add_document('test', 'second_id')
-    test_bucket.add_document('test', 'second_id', TermType.Bold)
+    # THIS SHOULD ADD ON ITS OWN NOW
+    test_bucket.add_document('tokenizer', 1)
+    test_bucket.add_document('tokenize', 1)
+    test_bucket.add_document('tokenize', 1)
+    test_bucket.add_document('tokens', 1)  # total should be 4
+    test_bucket.add_document('tokens', 2)
+    test_bucket.add_document('test', 2)
+    test_bucket.add_document('test', 2, TermType.Bold)
     test_bucket.print()
+    test_bucket.print_full()
 
-    test_bucket._disk_index.write_to_disk(test_bucket._token_map)
+    # test_bucket._disk_index.write_to_disk(test_bucket._token_map)
 
 
 if __name__ == '__main__':

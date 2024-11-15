@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import gzip
 
 
 FOLDER_NAME = 'index_files/'
@@ -20,7 +21,7 @@ class _DocumentIdLookup:
         self._url_lookup = {}
         self._path = Path(FOLDER_NAME + 'documents.txt')
         if not self._path.exists():
-            self._path.touch(777, False)
+            self._path.touch(0o777, False)
         else:
             for i, line in enumerate(self._path.open().readlines()):
                 self._lines.append(line.strip())
@@ -48,15 +49,19 @@ documents = _DocumentIdLookup()
 
 
 class PartialIndex:
-    FILE_EXT = '.index.dat'
+    # FILE_EXT = '.index.dat'
+    FILE_EXT = '.index.gz'
 
     def __init__(self, name: str) -> None:
         self._name = name
+        
+        # self._path = Path(FOLDER_NAME + self._name + PartialIndex.FILE_EXT)
         self._path = Path(FOLDER_NAME + self._name + PartialIndex.FILE_EXT)
 
 
     '''Reads line and returns the current token'''
-    def _read_line(self, map: dict, line: str, current_token: str) -> str:
+    def _read_line(self, map: dict, line: bytes, current_token: str) -> str:
+        line = str(line.decode('utf-8'))
         if line.startswith('>> '):
             # Encountering a new token
             current_token = line[3:].strip()
@@ -71,22 +76,27 @@ class PartialIndex:
 
     def read_from_disk(self) -> dict:
         if not self._path.exists():
-            self._path.touch(777, False)
+            self._path.touch(0o777, False)
         
         result_map = {}
         token = ''
-        with self._path.open() as file:
+
+        with gzip.open(self._path, 'rb') as file:
+        #     file_content = f.read()
+        # with self._path.open() as file:
             [token := self._read_line(result_map, line, token) for line in file.readlines()]
         
         return result_map
     
     
     def write_to_disk(self, data: dict):
-        with self._path.open('w') as file:
+        with gzip.open(self._path, 'wb') as file:
+        # with self._path.open('w') as file:
             for token, pages in data.items():
-                print(f'Writing entry: {[entry for entry in pages.values()]}')
-                data = (json.dumps(entry) + '\n' for entry in pages.values())
-                file.writelines((f'>> {token}\n', *data))
+                # print(f'Writing entry: {[entry for entry in pages.values()]}')
+                data = (bytes(json.dumps(entry) + '\n', 'utf-8') for entry in pages.values())
+                token_bytes = bytes(f'>> {token}\n', 'utf-8')
+                file.writelines((token_bytes, *data))
 
 
     def get_name(self) -> str:
