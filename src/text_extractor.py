@@ -57,9 +57,7 @@ def is_hidden(element):
     if 'hidden' in element.attrs: return True
         
     return False
-    
-    
-            
+     
 
 def extract_tokens(html):
     """
@@ -110,7 +108,8 @@ class TermType(Enum):
 def map_tokens(text_nodes):
     tokens = []
     for text, parent in text_nodes:
-        [tokens.append((t.group(), get_termType(parent.name).name)) for t in (re.finditer(r'\S+', text) or [])]
+        # [tokens.append((t.group(), get_termType(parent.name).name)) for t in (re.finditer(r'\S+', text) or [])]
+        [tokens.append((t.group(), get_termType(parent.name))) for t in (re.finditer(r'\S+', text) or [])]
     return tokens
 
 def get_termType(parent):

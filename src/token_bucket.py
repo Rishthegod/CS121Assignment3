@@ -33,6 +33,8 @@ class TokenBucket:
         # if our current size is too large, we update the disk index
         if len(self) >= BUCKET_ENTRY_LIMIT:
             print(f'Surpassed {BUCKET_ENTRY_LIMIT} of entries, updating partial index `{self._disk_index.get_name()}` on disk')
+            self._disk_index.write_to_disk(self._token_map)
+            self._token_map = {}
 
         stemmed = self.stem_token(token)
         token_docs = self._token_map.get(stemmed, {})

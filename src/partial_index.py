@@ -84,7 +84,7 @@ class PartialIndex:
     def write_to_disk(self, data: dict):
         with self._path.open('w') as file:
             for token, pages in data.items():
-                print([entry for entry in pages.values()])
+                print(f'Writing entry: {[entry for entry in pages.values()]}')
                 data = (json.dumps(entry) + '\n' for entry in pages.values())
                 file.writelines((f'>> {token}\n', *data))
 
@@ -96,17 +96,30 @@ class PartialIndex:
 
 def main():
     test_index = PartialIndex('test')
-    print(test_index.get_name())
-    print(result := test_index.read_from_disk())
-    print(test_index.write_to_disk(result))
+    test_map ={
+        "token": {
+            "https://1.1.1.1": { "document_id": "https://1.1.1.1", "frequency_normal": 4, "frequency": 4 },
+            "second_id":       { "document_id": "second_id",       "frequency_normal": 1, "frequency": 1 }
+        },
+        "test": {
+            "second_id": { "document_id": "second_id", "frequency_normal": 1, "frequency": 2, "frequency_bold": 1 }
+        }
+    }
+    
+    test_index.write_to_disk(test_map)
 
-    print('Existing first:', documents.get_url(0))
-    print('Existing second:', documents.get_url(1))
+    # print(test_index.get_name())
+    result = test_index.read_from_disk()
+    print(f'-----Testing: read_from_disk\n   {result}')
+    # print(test_index.write_to_disk(result))
 
-    documents.add_url('https://example.com')
-    new_id = documents.add_url('https://example.net')
+    # print('Existing first:', documents.get_url(0))
+    # print('Existing second:', documents.get_url(1))
 
-    print('New example.net:', documents.get_url(new_id))
+    # documents.add_url('https://example.com')
+    # new_id = documents.add_url('https://example.net')
+
+    # print('New example.net:', documents.get_url(new_id))
 
 
 if __name__ == '__main__':
