@@ -28,6 +28,8 @@ refer to HW2 code if needed
 '''
 
 from bs4 import BeautifulSoup, Comment
+from enum import Enum
+import re
 
 
 def is_hidden(element):
@@ -97,6 +99,31 @@ def extract_tokens(html):
                 tokens.append([text, parent])
 
     return tokens
+
+class TermType(Enum):
+    Normal = 'normal'
+    PageTitle = 'page_title'
+    Heading = 'heading'
+    Anchor = 'anchor'
+    Bold = 'bold'
+
+def map_tokens(text_nodes):
+    tokens = []
+    for text, parent in text_nodes:
+        [tokens.append((t.group(), get_termType(parent.name).name)) for t in (re.finditer(r'\S+', text) or [])]
+    return tokens
+
+def get_termType(parent):
+    if parent=="title":
+        return TermType.PageTitle
+    elif parent=="strong":
+        return TermType.Bold
+    elif parent[0] == 'h' and parent[1:].isdigit() and 1 <= int(parent[1:]) <= 6:
+        return TermType.Heading
+    elif parent=="a":
+        return TermType.Anchor
+    else:
+        return TermType.Normal
         
         
 def main():
@@ -115,6 +142,11 @@ def main():
     tokens = extract_tokens(html)
     for text, parent in tokens:
         print(f"Text: '{text}', Parent: <{parent.name}>")
+
+    print("Mapped Tokens:")
+    mapped_tokens = map_tokens(tokens)
+    for text, parent in mapped_tokens:
+        print(f"Text: '{text}', Parent: {parent}")
         
     html2 = '''
     <html>
@@ -146,6 +178,11 @@ def main():
     tokens2 = extract_tokens(html2)
     for text, parent in tokens2:
         print(f"Text: '{text}', Parent: <{parent.name}>")
+
+    print("Mapped Tokens 2:")
+    mapped_tokens2 = map_tokens(tokens2)
+    for text, parent in mapped_tokens2:
+        print(f"Text: '{text}', Parent: {parent}")
     
 
 if __name__ == '__main__':
