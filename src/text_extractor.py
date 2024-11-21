@@ -111,8 +111,9 @@ class TermType(Enum):
 def map_tokens(text_nodes):
     tokens = []
     for text, parent in text_nodes:
-        # [tokens.append((t.group(), get_termType(parent.name).name)) for t in (re.finditer(r'\S+', text) or [])]
-        [tokens.append((t.group(), get_termType(parent.name))) for t in (re.finditer(r'\S+', text) or [])]
+        for t in (re.finditer(r'\S+', text) or []):
+            token = re.sub(r'[^\w\s]', '', t.group()).lower()
+            tokens.append((token, get_termType(parent.name))) 
     return tokens
 
 def get_termType(parent):
@@ -172,6 +173,7 @@ def main():
             <div>
                 <p class="hide">hidden by css, but if it shows up then whatever</p>
                 Text inside div
+                (parentheses in text)
                 <p hidden>oh noes this is hidden</p>
                 <a>nested visible text</a>
                 <input type="hidden" value="secret"/>
@@ -194,6 +196,11 @@ def main():
     print('\nComparison')
     print(mapped_tokens2 == get_token_map(html2))
     print(get_token_map(html2))
+
+    html3 = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\"> <html>  <head>   <title>qSpell - Spelling Correction of Web Search Queries</title>   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">   <meta name=\"keywords\" content=\"qSpell - Search Query Spell Correction\">   <link href=\"style.css\" type=\"text/css\" rel=\"stylesheet\" />  </head>  <body><td>            If you use this data set for a research purpose, please use the following            citation:<br/><br/>            Y. Ganjisaffar et al., author = {Yasser Ganjisaffar and Andrea Zilio and Sara Javanmardi and Inci Cetindil            and Manik Sikka and Sandeep Paul Katumalla and Narges Khatib-Astaneh and Chen Li and Cristina Lopes},<br/>            &nbsp; &nbsp; title = {{qSpell}: Spelling Correction of Web Search Queries using Ranking Models and Iterative Correction},<br/>            &nbsp; &nbsp; booktitle = {Spelling Alteration for Web Search Workshop},<br/>            &nbsp; &nbsp; month = {July},<br/>            &nbsp; &nbsp; year = {2011},<br/>            &nbsp; &nbsp; location = {Bellevue, WA, USA},<br/>            }                      </td>          </tr>         </table>                      </div>       </div>      </div>            <div class=\"modulecontainer-steel\">       </body> </html> "
+    print('\nTest Case 3:')
+    for text, parent in get_token_map(html3):
+        print(f"Text: '{text}' \t\t=> {parent}")
 
 
 if __name__ == '__main__':

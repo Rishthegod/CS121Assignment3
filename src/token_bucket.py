@@ -1,4 +1,3 @@
-from nltk.stem import PorterStemmer
 import json
 from partial_index import PartialIndex
 from enum import Enum
@@ -19,7 +18,6 @@ class TokenBucket:
     def __init__(self, name: str) -> None:
         self._size = 0
         self._token_map = {}
-        self._stemmer = PorterStemmer()
         self._disk_index = PartialIndex(name)
 
 
@@ -29,7 +27,7 @@ class TokenBucket:
         doc_entry['frequency'] = doc_entry.get('frequency', 0) + 1
 
 
-    def add_document(self, token: str, document_id: int, term_type: TermType = TermType.Normal, idf = None) -> None:
+    def add_document(self, normalized_token: str, document_id: int, term_type: TermType = TermType.Normal, idf = None) -> None:
         if type(document_id) != int:
             raise TypeError('Invalid Document ID. Must be a number from documents.add_url() return value')
         document_id = str(document_id)
@@ -40,8 +38,7 @@ class TokenBucket:
             # self._disk_index.write_to_disk(self._token_map)
             self.merge()
 
-        stemmed = self.stem_token(token)
-        token_docs = self._token_map.get(stemmed, {})
+        token_docs = self._token_map.get(normalized_token, {})
 
         doc_entry = token_docs.get(document_id, { 'document_id': document_id })
         if document_id not in token_docs:
@@ -51,7 +48,7 @@ class TokenBucket:
 
         # Write-back for if it is a new entry
         token_docs[document_id] = doc_entry
-        self._token_map[stemmed] = token_docs
+        self._token_map[normalized_token] = token_docs
 
 
     def merge(self) -> None:
@@ -90,9 +87,6 @@ class TokenBucket:
         # document_counts = [len(token_doc_map) for token_doc_map in self._token_map.values()]
         # return sum(document_counts)
 
-
-    def stem_token(self, token: str) -> str:
-        return self._stemmer.stem(token)
 
 
 
