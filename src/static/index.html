@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <title>SERR (ch)</title>
+    <link rel="shortcut icon" href="chill.png" type="image/x-icon">
+    <style>
+        html, body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        body {
+            max-width: 1000px;
+            margin-inline: auto;
+        }
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            opacity: 0.2;
+            background-image: url(chill.png);
+            background-size: cover;
+            background-position: 50% 20%;
+            background-repeat: no-repeat;
+        }
+        .container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .container h1 { margin: 0; }
+        .flex {
+            display: flex;
+            gap: 8px;
+        }
+        .container.flex {
+            align-items: center;
+            top: 0;
+            transform: translate(-50%, 12px);
+            white-space: nowrap;
+        }
+        input {
+            padding: 6px 12px;
+        }
+        #results {
+            padding-top: 64px;
+        }
+        .highlight-bold b { color: skyblue }
+    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div class="bg-layer"></div>
+    <div class="container" id="container">
+        <h1>SERR (ch)</h1>
+        <br>
+        <form action="/search" class="flex" id="form">
+            <input type="text" name="q" placeholder="Enter text to search..." id="query">
+            <input type="submit" value="Search" id="submit">
+        </form>
+        <br>
+        <span class="highlight-bold">Developed by <b>S</b>am, <b>E</b>than, <b>R</b>achel, <b>R</b>ish</span>
+        <br>
+    </div>
+    <ol id="results"></ol>
+    <script defer>
+        form.addEventListener('submit', async e => {
+            e.preventDefault()
+            container.classList.add('flex')
+            results.innerText = 'Loading...'
+
+            const scalar = 5;
+            const wine = confetti.shapeFromText({ text: '🍷', scalar });
+            const sparkles = confetti.shapeFromText({ text: '✨', scalar });
+            const origin = { x: 0.53, y: 0.04 }
+
+            confetti({ shapes: [wine], scalar, origin, angle: 270, spread: 270 });
+            
+            const searchQuery = query.value
+            const response = await fetch('/search?q=' + encodeURIComponent(searchQuery)).then(x => x.json())
+
+            confetti({ shapes: [sparkles, sparkles], scalar, origin, angle: 270, spread: 270 });
+
+            results.innerText = ''
+            for (const url of response) {
+                const item = results.appendChild(document.createElement('li'))
+                const link = item.appendChild(document.createElement('a'))
+                link.href = link.innerText = url
+                link.target = '_blank'
+            }
+        })
+    </script>
+</body>
+</html>

@@ -2,10 +2,11 @@ from build_index import find_bucket
 from nltk import PorterStemmer
 from partial_index import documents
 import time
+import re
 
 
-def main():
-    query = input('term: ').split(' ')
+def search(user_input: str):
+    query = user_input.split(' ')
     doc_lists = []
     final_list = []
 
@@ -57,15 +58,25 @@ def main():
     diff = time.perf_counter() - start
     print(f'Query took {round(diff * 1000, 3)}ms\n\nResults:')
 
-    for url in [documents.get_url(int(d['document_id'])) for d in final_list[:5]]:
+    final_list.sort(key=lambda d: -d['frequency'])
+    urls_list = [documents.get_url(int(d['document_id'])) for d in final_list[:20]]
+    results = urls_list[:20]
+    url_set = set()
+    for url in reversed(results):
+        normalized = re.sub(r'#.*$', '', url)
+        if normalized in url_set: results.remove(url)
+        else: url_set.add(normalized)
+
+
+    for url in results[:5]:
         print('  ' + url)
     
     print('\n')
+    return results[:5]
 
 
-
-    
-
+def main():
+    search(input('term: '))
 
 
 if __name__ == '__main__':
