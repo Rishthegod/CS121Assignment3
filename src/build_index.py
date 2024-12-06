@@ -76,6 +76,7 @@ def build_index_helper(source: Path) -> dict:
     print(f',  add_url={round(diff * 1000, 3)}ms', end=', ')
 
     mapped_tokens = te.map_tokens(te.extract_tokens(html_content))
+    token_count = len(mapped_tokens)
 
     start, diff = time.perf_counter(), time.perf_counter() - start
     print(f' map_tokens={round(diff * 1000, 3)}ms', end=', ')
@@ -85,7 +86,9 @@ def build_index_helper(source: Path) -> dict:
     for token, term_type in mapped_tokens:
         stem = stemmer.stem(token.lower())
         bucket = find_bucket(stem)
-        bucket.add_document(stem, doc_id, term_type)
+        bucket.add_document(stem, doc_id, term_type)  # TODO also pass in token count for term frequency (tf)
+        # idf is calculated after index is built (log(N/posting_list_len))
+        # -> done with tf.idf
 
     start, diff = time.perf_counter(), time.perf_counter() - start
     print(f' add_doc={round(diff * 1000, 3)}ms')
