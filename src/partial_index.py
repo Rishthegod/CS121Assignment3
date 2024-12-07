@@ -58,14 +58,17 @@ class PartialIndex:
         # self._path = Path(FOLDER_NAME + self._name + PartialIndex.FILE_EXT)
         self._path = Path(FOLDER_NAME + self._name + PartialIndex.FILE_EXT)
 
+        self._term_positions = {}
+
 
     '''Reads line and returns the current token'''
-    def _read_line(self, map: dict, line: bytes, current_token: str) -> str:
+    def _read_line(self, map: dict, line: bytes, current_token: str, cursor_pos: int) -> str:
         line = str(line.decode('utf-8'))
         if line.startswith('>> '):
             # Encountering a new token
             current_token = line[3:].strip()
             map[current_token] = {}
+            self._term_positions[current_token] = cursor_pos
         else:
             # Encountering an entry
             data = json.loads(line)
@@ -80,11 +83,13 @@ class PartialIndex:
         
         result_map = {}
         token = ''
+        cursor_pos = 0
 
         with gzip.open(self._path, 'rb') as file:
-        #     file_content = f.read()
-        # with self._path.open() as file:
-            [token := self._read_line(result_map, line, token) for line in file.readlines()]
+            # [token := self._read_line(result_map, line, token) for line in file.readlines()]
+            for line in file.readlines():
+                token = self._read_line(result_map, line, token, cursor_pos)
+                cursor_pos += len(line)
         
         return result_map
     

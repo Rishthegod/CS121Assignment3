@@ -1,8 +1,12 @@
 from build_index import find_bucket
 from nltk import PorterStemmer
 from partial_index import documents
+from term_finder import load_glossary_from_disk
 import time
 import re
+
+
+glossary = load_glossary_from_disk()
 
 
 def search(user_input: str):
