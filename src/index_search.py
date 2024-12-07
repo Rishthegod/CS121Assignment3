@@ -10,7 +10,7 @@ glossary = load_glossary_from_disk()
 
 
 def search(user_input: str):
-    query = user_input.split(' ')
+    query = {*user_input.split(' ')}
     doc_lists = []
     final_list = []
 

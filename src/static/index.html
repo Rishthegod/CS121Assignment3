@@ -23,6 +23,7 @@
             background-size: cover;
             background-position: 50% 20%;
             background-repeat: no-repeat;
+            pointer-events: none;
         }
         .container {
             position: fixed;
@@ -48,6 +49,8 @@
             padding-top: 64px;
         }
         .highlight-bold b { color: skyblue }
+
+        #lame-label { position: fixed; bottom: 0; left: 0; margin: 12px; }
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
@@ -65,6 +68,10 @@
         <br>
     </div>
     <ol id="results"></ol>
+    <label id="lame-label">
+      <input type="checkbox" name="lame" id="lame">
+      Lame Mode
+    </label>
     <script defer>
         form.addEventListener('submit', async e => {
             e.preventDefault()
@@ -76,12 +83,14 @@
             const sparkles = confetti.shapeFromText({ text: '✨', scalar });
             const origin = { x: 0.53, y: 0.04 }
 
-            confetti({ shapes: [wine], scalar, origin, angle: 270, spread: 270 });
+            if (!lame.checked) confetti({ shapes: [wine], scalar, origin, angle: 270, spread: 270 });
             
             const searchQuery = query.value
+            const startTime = performance.now()
             const response = await fetch('/search?q=' + encodeURIComponent(searchQuery)).then(x => x.json())
+            const time = Math.round((performance.now() - startTime) * 100) / 100
 
-            confetti({ shapes: [sparkles, sparkles], scalar, origin, angle: 270, spread: 270 });
+            if (!lame.checked) confetti({ shapes: [sparkles, sparkles], scalar, origin, angle: 270, spread: 270 });
 
             results.innerText = ''
             for (const url of response) {
@@ -90,6 +99,8 @@
                 link.href = link.innerText = url
                 link.target = '_blank'
             }
+
+            results.innerHTML += `<br>Query took ${time}ms`
         })
     </script>
 </body>
