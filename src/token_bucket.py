@@ -24,6 +24,7 @@ class TokenBucket:
     def add_frequency(self, doc_entry: dict, freq_type: TermType, doc_length: int):
         freq_key = 'frequency_' + freq_type.value
         doc_entry[freq_key] = doc_entry.get(freq_key, 0) + 1
+        # summing 1/doc_length at each step instead of dividing at the end 
         doc_entry['frequency'] = doc_entry.get('frequency', 0) + 1 / doc_length
 
 
