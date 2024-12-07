@@ -86,9 +86,7 @@ def build_index_helper(source: Path) -> dict:
     for token, term_type in mapped_tokens:
         stem = stemmer.stem(token.lower())
         bucket = find_bucket(stem)
-        bucket.add_document(stem, doc_id, term_type)  # TODO also pass in token count for term frequency (tf)
-        # idf is calculated after index is built (log(N/posting_list_len))
-        # -> done with tf.idf
+        bucket.add_document(stem, doc_id, term_type, doc_length=token_count)
 
     start, diff = time.perf_counter(), time.perf_counter() - start
     print(f' add_doc={round(diff * 1000, 3)}ms')

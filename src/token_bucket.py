@@ -21,13 +21,13 @@ class TokenBucket:
         self._disk_index = PartialIndex(name)
 
 
-    def add_frequency(self, doc_entry: dict, freq_type: TermType):
+    def add_frequency(self, doc_entry: dict, freq_type: TermType, doc_length: int):
         freq_key = 'frequency_' + freq_type.value
         doc_entry[freq_key] = doc_entry.get(freq_key, 0) + 1
-        doc_entry['frequency'] = doc_entry.get('frequency', 0) + 1
+        doc_entry['frequency'] = doc_entry.get('frequency', 0) + 1 / doc_length
 
 
-    def add_document(self, normalized_token: str, document_id: int, term_type: TermType = TermType.Normal, idf = None) -> None:
+    def add_document(self, normalized_token: str, document_id: int, term_type: TermType = TermType.Normal, *, doc_length: int) -> None:
         if type(document_id) != int:
             raise TypeError('Invalid Document ID. Must be a number from documents.add_url() return value')
         document_id = str(document_id)
@@ -44,7 +44,7 @@ class TokenBucket:
         if document_id not in token_docs:
             self._size += 1
 
-        self.add_frequency(doc_entry, term_type)
+        self.add_frequency(doc_entry, term_type, doc_length)
 
         # Write-back for if it is a new entry
         token_docs[document_id] = doc_entry
@@ -95,13 +95,13 @@ def main():
     # test_bucket._token_map = test_bucket._disk_index.read_from_disk()
 
     # THIS SHOULD ADD ON ITS OWN NOW
-    test_bucket.add_document('tokenizer', 1)
-    test_bucket.add_document('tokenize', 1)
-    test_bucket.add_document('tokenize', 1)
-    test_bucket.add_document('tokens', 1)  # total should be 4
-    test_bucket.add_document('tokens', 2)
-    test_bucket.add_document('test', 2)
-    test_bucket.add_document('test', 2, TermType.Bold)
+    test_bucket.add_document('tokenizer', 1, doc_length=112)
+    test_bucket.add_document('tokenize', 1, doc_length=112)
+    test_bucket.add_document('tokenize', 1, doc_length=112)
+    test_bucket.add_document('tokens', 1, doc_length=112)  # total should be 4
+    test_bucket.add_document('tokens', 2, doc_length=80)
+    test_bucket.add_document('test', 2, doc_length=80)
+    test_bucket.add_document('test', 2, TermType.Bold, doc_length=80)
     test_bucket.print()
     test_bucket.print_full()
 
