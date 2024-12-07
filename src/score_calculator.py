@@ -12,12 +12,6 @@ class Multipliers(Enum):
     PageTitle = 3
 
 
-
-def calculate_idf(data: dict, c_length: int):
-    df = len(data)
-    print(df)
-    return log10(c_length / df)
-    
 def weighted_tf(data: dict):
     freq_ratio = data["frequency"]
     weight = 0
@@ -60,6 +54,7 @@ def rank_score(query, index, c_length):
         for doc_id, data in posting.items():
             log_tdf = log10(weighted_tf(data) + 1)
             idf = c_length / num_docs
+            print(f'{doc_id}: tdf is {log_tdf}')
             accumulator[doc_id] +=  log_tdf * idf
     
     for doc_id, score in accumulator.items():
@@ -90,9 +85,10 @@ def main():
                 "frequency_normal" : 1,
                 "frequency_bold" : 1,
                 "frequency_title" : 2000,
-                "frequency" : 0.40
+                "frequency" : 0.50
             }
         },
+
         "earl" : {
             0 : {
                 "frequency_normal" : 10,
