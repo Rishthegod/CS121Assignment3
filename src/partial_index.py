@@ -77,7 +77,7 @@ class PartialIndex:
         return current_token
 
 
-    def read_from_disk(self) -> dict:
+    def read_from_disk(self, single_term_position = -1) -> dict:
         if not self._path.exists():
             self._path.touch(0o777, False)
         
@@ -86,10 +86,15 @@ class PartialIndex:
         cursor_pos = 0
 
         with gzip.open(self._path, 'rb') as file:
+            if single_term_position > 0: file.seek(single_term_position)
             # [token := self._read_line(result_map, line, token) for line in file.readlines()]
             for line in file.readlines():
-                token = self._read_line(result_map, line, token, cursor_pos)
+                token_after = self._read_line(result_map, line, token, cursor_pos)
                 cursor_pos += len(line)
+                # When term changes (ie ) and we're only looking for one term, return early
+                if token != '' and token != token_after and single_term_position > -1:
+                    return result_map
+                token = token_after
         
         return result_map
     

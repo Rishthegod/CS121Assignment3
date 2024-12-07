@@ -22,11 +22,17 @@ def search(user_input: str):
         # print(term, stemmed, find_bucket(stemmed))
         bucket = find_bucket(stemmed)
 
-        # print('Reading bucket...')
-        data = bucket._disk_index.read_from_disk()
-        doc_list: dict = data.get(stemmed, {})
-        sorted_entries = [*doc_list.values()]
-        sorted_entries.sort(key=lambda x: int(x['document_id']))
+        print('Reading bucket...')
+        lookup_position = glossary.get(stemmed, -1)
+        # data = bucket._disk_index.read_from_disk()
+        # doc_list: dict = data.get(stemmed, {})
+        if lookup_position > -1:
+            doc_list = bucket.read_term_at_position(lookup_position)
+            sorted_entries = [*doc_list.values()]
+            sorted_entries.sort(key=lambda x: int(x['document_id']))
+        else:
+            sorted_entries = []
+
         doc_lists.append(sorted_entries)
     
     shortest_len = min([len(l) for l in doc_lists])

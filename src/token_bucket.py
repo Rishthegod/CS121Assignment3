@@ -50,6 +50,11 @@ class TokenBucket:
         token_docs[document_id] = doc_entry
         self._token_map[normalized_token] = token_docs
 
+    def read_term_at_position(self, term_position: int) -> dict:
+        # THIS ASSUMES YOUR TERM EXISTS
+        partial_doc_lookup = self._disk_index.read_from_disk(term_position)
+        return [*partial_doc_lookup.values()][0]
+
 
     def merge(self) -> None:
         temp_map = self._disk_index.read_from_disk()
