@@ -35,10 +35,10 @@ def weighted_tf(data: dict):
     if total_words < 10 and freq_ratio > 0.05:
         return 0 # too few tokens for this document to be meaningful
 
-    #doc_length = total_words / freq_ratio
+    doc_length = total_words / freq_ratio
 
     avg_weight = weight / total_words
-    return avg_weight * freq_ratio #+ doc_length
+    return avg_weight * freq_ratio * log10(doc_length)
 
 
 

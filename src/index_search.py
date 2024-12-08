@@ -40,7 +40,7 @@ def search(user_input: str):
         # print(term, stemmed, find_bucket(stemmed))
         bucket = find_bucket(stemmed)
 
-        print(f'Reading bucket for "{term}" (idf={log10(total_docs / doc_freq)})...')
+        print(f'Reading bucket for "{term}" (idf={get_idf((term, lookup_position, doc_freq))})...')
         # lookup_position, doc_freq = glossary.get(stemmed, [-1, 0])
         # print(f'pos={lookup_position}, ct={doc_freq}')
         # data = bucket._disk_index.read_from_disk()
