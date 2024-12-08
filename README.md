@@ -11,3 +11,8 @@
 - `python3 src/index_search.py`
 - Enter a query and hit enter
 
+## Upgrading to M3
+- Rebuild the index
+- Rebuild the glossary: `python3 src/term_finder.py`
+- Move the `glossary.json` into the `index_files` folder
+- Run the index search or web server script

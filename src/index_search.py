@@ -4,7 +4,6 @@ from partial_index import documents
 from term_finder import load_glossary_from_disk
 import time
 import re
-from pathlib import Path
 from score_calculator import rank_score
 from math import log10
 
@@ -23,6 +22,8 @@ def search(user_input: str):
     doc_lists = {}
     final_list = []
 
+    start = time.perf_counter()
+
     stemmer = PorterStemmer()
     terms = [(term, *glossary.get(stemmer.stem(term), [-1, 0])) for term in query]  # [term, position, doc_count]
     terms.sort(key = lambda t: t[2])                                                # ascending doc count
@@ -32,9 +33,6 @@ def search(user_input: str):
     terms = [t for t in terms if get_idf(t) >= idf_threshold]     # Kept terms
     all_stopwords = highest_idf <= 0.5           # highest idf <= 0.5
     print('Kept terms:', terms, all_stopwords)
-
-
-    start = time.perf_counter()
 
     # Get lists for each term
     for term, lookup_position, doc_freq in terms:
@@ -72,10 +70,6 @@ def search(user_input: str):
     
     print(ranked[:5])
 
-
-    diff = time.perf_counter() - start
-    print(f'Query took {round(diff * 1000, 3)}ms\n\nResults:')
-
     # final_list.sort(key=lambda d: -d['frequency'])
     final_list = ranked
     urls_list = [documents.get_url(int(d[1])) for d in final_list[:20]]
@@ -86,6 +80,8 @@ def search(user_input: str):
         if normalized in url_set: results.remove(url)
         else: url_set.add(normalized)
 
+    diff = time.perf_counter() - start
+    print(f'Query took {round(diff * 1000, 3)}ms\n\nResults:')
 
     for url in results[:5]:
         print('  ' + url)

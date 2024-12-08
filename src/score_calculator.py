@@ -14,6 +14,7 @@ class Multipliers(Enum):
 
 def weighted_tf(data: dict):
     freq_ratio = data["frequency"]
+
     weight = 0
     total_words = 0
     for freq_type, count in data.items():
@@ -31,8 +32,13 @@ def weighted_tf(data: dict):
 
         total_words += count
 
+    if total_words < 10 and freq_ratio > 0.05:
+        return 0 # too few tokens for this document to be meaningful
+
+    #doc_length = total_words / freq_ratio
+
     avg_weight = weight / total_words
-    return avg_weight * freq_ratio
+    return avg_weight * freq_ratio #+ doc_length
 
 
 
