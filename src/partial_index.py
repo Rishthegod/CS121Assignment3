@@ -48,6 +48,26 @@ class _DocumentIdLookup:
 documents = _DocumentIdLookup()
 
 
+class GlossaryEntry(list):
+    def __init__(self, position: int):
+        self._position = position
+        self._length = None
+        super().__init__()
+    
+    def set_length(self, length: int):
+        self._length = length
+        super().append(self.position)
+        super().append(self.length)
+    
+    @property
+    def position(self):
+        return self._position
+
+    @property
+    def length(self):
+        return self._length
+
+
 class PartialIndex:
     # FILE_EXT = '.index.dat'
     FILE_EXT = '.index.gz'
@@ -68,7 +88,7 @@ class PartialIndex:
             # Encountering a new token
             current_token = line[3:].strip()
             map[current_token] = {}
-            self._term_positions[current_token] = cursor_pos
+            self._term_positions[current_token] = GlossaryEntry(cursor_pos)
         else:
             # Encountering an entry
             data = json.loads(line)
@@ -84,6 +104,7 @@ class PartialIndex:
         result_map = {}
         token = ''
         cursor_pos = 0
+        line_count = 0
 
         with gzip.open(self._path, 'rb') as file:
             if single_term_position > 0: file.seek(single_term_position)
@@ -91,9 +112,13 @@ class PartialIndex:
             for line in file.readlines():
                 token_after = self._read_line(result_map, line, token, cursor_pos)
                 cursor_pos += len(line)
+                line_count += 1
                 # When term changes (ie ) and we're only looking for one term, return early
                 if token != '' and token != token_after and single_term_position > -1:
                     return result_map
+                elif token != '' and token != token_after:
+                    self._term_positions[token].set_length(line_count)
+                    line_count = 0
                 token = token_after
         
         return result_map

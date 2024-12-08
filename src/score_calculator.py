@@ -25,81 +25,96 @@ def weighted_tf(data: dict):
             weight += count * Multipliers.Heading.value
         elif freq_type == "frequency_anchor": 
             weight += count * Multipliers.Anchor.value
-        elif freq_type == "frequency_title": 
+        elif freq_type == "frequency_page_title": 
             weight += count * Multipliers.PageTitle.value
+        else: continue
 
         total_words += count
 
     avg_weight = weight / total_words
-    return avg_weight*freq_ratio
+    return avg_weight * freq_ratio
 
 
 
 def rank_score(query, index, c_length):
     k = 5
-    accumulator = {}
-    term_postings = []
+    accumulator = {}        # Map:  doc_id ==> tf.idf
+    term_collections = []
     pq = []
 
     for term in query:
         if term in index:
-            term_postings.append(index[term])
+            term_collections.append(index[term])
+        else:
+            print('term somehow not found')
 
+    first_idf = None
+    for i, term_postings in enumerate(term_collections):
+        num_docs = len(term_postings)
+        if num_docs == 0: continue
 
-    for posting in term_postings:
-        num_docs = len(posting)
-        for key in posting.keys():
-            if key not in accumulator:
-                accumulator[key] = 0
-        for doc_id, data in posting.items():
+        idf = log10(c_length / num_docs)
+        print(f'idf = {idf} for {query[i]}')
+        if not first_idf: first_idf = idf
+        elif idf < first_idf / 2:
+            print(f'Skipping term "{query[i]}"')
+            continue
+
+        # for key in term_postings.keys():
+        #     if key not in accumulator:
+        #         accumulator[key] = 0
+        # for doc_id, data in term_postings.items():
+        for data in term_postings:
+            doc_id = data['document_id']
+
             log_tdf = log10(weighted_tf(data) + 1)
-            idf = c_length / num_docs
-            print(f'{doc_id}: tdf is {log_tdf}')
-            accumulator[doc_id] +=  log_tdf * idf
+            # print(f'{doc_id}: tdf is {log_tdf}')
+            accumulator[doc_id] = accumulator.get(doc_id, 0) + log_tdf * idf
     
     for doc_id, score in accumulator.items():
         heapq.heappush(pq, (score, doc_id))
-        if len(pq) > k:
-            heapq.heappop(k)
+        # if len(pq) > k:
+        #     heapq.heappop(k)
         
     return sorted(pq, reverse=True)
 
+
 def main():
     example_index = {
-        "hello" : {
-            0 : {
+        "hello" : [
+            {
+                "document_id": 0,
                 "frequency_normal" : 102,
                 "frequency_bold" : 90,
-                "frequency_title" : 8,
+                "frequency_page_title" : 8,
                 "frequency" : 0.05
             },
-
-            1 : {
+            {
+                "document_id": 1,
                 "frequency_normal" : 21,
                 "frequency_bold" : 4,
-                "frequency_title" : 1,
+                "frequency_page_title" : 1,
                 "frequency" : 0.50
             },
-            
-            2 : {
+            {
+                "document_id": 2,
                 "frequency_normal" : 1,
                 "frequency_bold" : 1,
-                "frequency_title" : 2000,
+                "frequency_page_title" : 2000,
                 "frequency" : 0.50
             }
-        },
-
-        "earl" : {
-            0 : {
-                "frequency_normal" : 10,
-                "frequency_bold" : 20,
-                "frequency_title" : 1,
-                "frequency" : 0.80
-            }
-        }
+        ],
+        "earl" : [{
+            "document_id": 0,
+            "frequency_normal" : 10,
+            "frequency_bold" : 20,
+            "frequency_page_title" : 1,
+            "frequency" : 0.80
+        }]
     }
     print(rank_score(["hello", "earl"], example_index, 10))
     # print(example_index)
-if __name__ == "__main__":
 
+
+if __name__ == "__main__":
     main()
