@@ -15,7 +15,7 @@ _bucket_keys = [
 
 _bucket_pairs = [[first + second for second in _bucket_keys] for first in _bucket_keys]
 
-all_buckets = {key: TokenBucket('output/' + key) for l in _bucket_pairs for key in l}
+all_buckets = {key: TokenBucket('full2/' + key) for l in _bucket_pairs for key in l}
 
 # all_buckets = [
 #     TokenBucket("A-F"),
